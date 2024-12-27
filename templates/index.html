@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .container {
+            margin: 2rem auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: linear-gradient(45deg, #1a73e8, #289cf5);
+            color: white;
+            border-top-left-radius: 15px !important;
+            border-top-right-radius: 15px !important;
+            padding: 1.5rem;
+        }
+        .card-body {
+            padding: 2rem;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #1a73e8, #289cf5);
+            border: none;
+            border-radius: 25px;
+            padding: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.4);
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .form-control-file {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+            cursor: pointer;
+        }
+        #prediction {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a73e8;
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .loading i {
+            color: #1a73e8;
+            font-size: 2rem;
+        }
+        h2 {
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+        .upload-icon {
+            font-size: 3rem;
+            color: #1a73e8;
+            margin-bottom: 1rem;
+        }
+    </style>
+    <script>
+        async function uploadFile(event) {
+            event.preventDefault();
+            document.querySelector('.loading').style.display = 'block';
+            document.querySelector('#prediction').innerText = '';
+
+            const formData = new FormData();
+            const fileField = document.querySelector('input[type="file"]');
+            formData.append('file', fileField.files[0]);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    getPrediction();
+                } else {
+                    alert('File upload failed.');
+                }
+            } finally {
+                document.querySelector('.loading').style.display = 'none';
+            }
+        }
+
+        async function getPrediction() {
+            const response = await fetch('/predict');
+            const data = await response.json();
+            document.getElementById('prediction').innerHTML = `
+                <i class="fas fa-chart-line mr-2"></i>
+                Predicted next close price: $${data.predicted_price.toFixed(2)}
+            `;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h2><i class="fas fa-robot mr-2"></i>Stock Price Prediction</h2>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <form id="uploadForm" onsubmit="uploadFile(event)">
+                            <div class="form-group">
+                                <label for="file">Upload your CSV file to predict stock prices</label>
+                                <input type="file" class="form-control-file" id="file" name="file" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-magic mr-2"></i>Upload and Predict
+                            </button>
+                        </form>
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                        <p id="prediction"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
